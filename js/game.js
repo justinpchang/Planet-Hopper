@@ -152,7 +152,6 @@ function update() {
         circles.destroy();
         circles = game.add.graphics(0, 0);
         circles.lineStyle(1, 0xFF00FF);
-        circles.drawCircle(planets[0].x, planets[0].y, 100);
         circles.drawCircle(planets[1].x, planets[1].y, 100);
         circles.lineStyle(0, 0xFF00FF);
     }
@@ -177,7 +176,6 @@ function update() {
         circles = game.add.graphics(0, 0);
         circles.lineStyle(1, 0xFF00FF);
         circles.drawCircle(planets[0].x, planets[0].y, 100);
-        circles.drawCircle(planets[1].x, planets[1].y, 100);
         circles.lineStyle(0, 0xFF00FF);
     }
 
