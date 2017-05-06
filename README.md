@@ -8,7 +8,7 @@ In order to successfully 'visit' a planet, the rocket must enter the zone's deno
 The player can only control forward and backward thrust of the rocket using the up and down arrow keys.
 
 ## To host:
-- Install node.js (Check for this by typing `node -v` in the command line)
+- Install [Node.js](https://nodejs.org/en/) (Check for this by typing `node -v` in the command line)
 - Install Express by typing in `npm install express --save`
 - Navigate to the main game directory and start the server using `node server.js`
-- Navigate to `localhost:8000` in your web browser to play the game
+- Navigate to [port 8000 of localhost](http://127.0.0.1:8000/) in your web browser to play the game
