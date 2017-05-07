@@ -5,10 +5,11 @@
  *************************************/
 
 const PROXIMITY = 100; // distance the rocket needs to be away from planet
-const BUFFER_ZONE = 400; // distance the rocket can stray from the bounds
+const BUFFER_ZONE = 200; // distance the rocket can stray from the bounds
 const UNIT_J = new Vector(0, -1);
 const THRUST = .1;
 const PLANET_MASS = 1300; // 800-1500
+const FUEL_INTERVAL = 5; // every fifth planet
 
 var rocket;
 var planets;
@@ -27,7 +28,6 @@ function preload() {
     game.load.image('planetred', 'assets/planetred.png');
     game.load.image('planetgreen', 'assets/planetgreen.png');
     game.load.image('planetfuel', 'assets/planetfuel.png');
-    game.load.image('restartbutton', 'assets/restartbutton.png');
     // set time mode for FPS counter
     game.time.advancedTiming = true;
 }
@@ -160,6 +160,15 @@ function update() {
 
     // check if within proximity of planet
     if(calculateDistance(planets[0]) && (curPlanetIndex === 2 || curPlanetIndex != 0)) {
+        // check if fuel planet
+        if(score % FUEL_INTERVAL == 0) {
+            if(this.fuelLevel <= 50) {
+                this.fuelLevel += 50;
+            } else {
+                this.fuelLevel = 100;
+            }
+        }
+
         curPlanetIndex = 0;
         planets[0].changeColor();
         // replace planet 2
@@ -173,7 +182,7 @@ function update() {
         }
         var mass = getRandomInt(800, 1500);
         console.log(score);
-        var fuel = (score % 4 == 0 && score != 0);
+        var fuel = (score % FUEL_INTERVAL == 4 && score != 0);
         planets[1] = new Planet(game, nx, ny, mass, fuel);
         score++;
         this.score.setText("Score: " + score);
@@ -183,16 +192,17 @@ function update() {
         circles.lineStyle(1, 0xFF00FF);
         circles.drawCircle(planets[1].x, planets[1].y, 100);
         circles.lineStyle(0, 0xFF00FF);
+    }
+    if(calculateDistance(planets[1]) && (curPlanetIndex === 2 || curPlanetIndex != 1)) {
         // check if fuel planet
-        if(score % 5 == 0) {
+        if(score % FUEL_INTERVAL == 0) {
             if(this.fuelLevel <= 50) {
                 this.fuelLevel += 50;
             } else {
                 this.fuelLevel = 100;
             }
         }
-    }
-    if(calculateDistance(planets[1]) && (curPlanetIndex === 2 || curPlanetIndex != 1)) {
+
         curPlanetIndex = 1;
         planets[1].changeColor();
         // replace planet 1
@@ -206,7 +216,7 @@ function update() {
         }
         var mass = getRandomInt(800, 1500);
         console.log(score);
-        var fuel = (score % 4 == 3 && score != 0);
+        var fuel = (score % FUEL_INTERVAL == 4 && score != 0);
         planets[0] = new Planet(game, nx, ny, mass, fuel);
         score++;
         this.score.setText("Score: " + score);
