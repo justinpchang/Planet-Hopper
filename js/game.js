@@ -26,6 +26,7 @@ function preload() {
     game.load.image('planetred', 'assets/planetred.png');
     game.load.image('planetgreen', 'assets/planetgreen.png');
     game.load.image('planetfuel', 'assets/planetfuel.png');
+    game.load.image('restartbutton', 'assets/restartbutton.png');
     // set time mode for FPS counter
     game.time.advancedTiming = true;
 }
@@ -147,8 +148,7 @@ function update() {
     rocket.rotation = this.direction;
 
     // check if rocket has hit planet
-    if(planets[0].isOverlapping(rocket.x, rocket.y) || planets[1].isOverlapping(rocket.x, rocket.y)) {
-        // pause the game and display game over text
+    if(planets[0].isOverlapping(rocket.x, rocket.y) || planets[1].isOverlapping(rocket.x, rocket.y)) {    // pause the game and display game over text
         game.paused = true;
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
     }
@@ -167,6 +167,7 @@ function update() {
             ny = getRandomInt(100, game.height - 100);
         }
         var mass = getRandomInt(800, 1500);
+        console.log(score);
         var fuel = (score % 4 == 0 && score != 0);
         planets[1] = new Planet(game, nx, ny, mass, fuel);
         score++;
@@ -199,7 +200,8 @@ function update() {
             ny = getRandomInt(100, game.height - 100);
         }
         var mass = getRandomInt(800, 1500);
-        var fuel = (score % 4 == 0 && score != 0);
+        console.log(score);
+        var fuel = (score % 4 == 3 && score != 0);
         planets[0] = new Planet(game, nx, ny, mass, fuel);
         score++;
         this.score.setText("Score: " + score);
@@ -212,8 +214,7 @@ function update() {
     }
 
     // check bounds
-    if(rocket.x < -1 * BUFFER_ZONE || rocket.x > game.width + BUFFER_ZONE || rocket.y < -1 * BUFFER_ZONE || rocket.y > game.height + BUFFER_ZONE) {
-        // pause the game and display game over text
+    if(rocket.x < -1 * BUFFER_ZONE || rocket.x > game.width + BUFFER_ZONE || rocket.y < -1 * BUFFER_ZONE || rocket.y > game.height + BUFFER_ZONE) {    // pause the game and display game over text
         game.paused = true;
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
     }
