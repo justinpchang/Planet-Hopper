@@ -5,6 +5,7 @@ class Planet {
         this.mass = mass;
         this.planet = game.add.sprite(x, y, 'planetgreen');
         this.planet.anchor.set(0.5, 0.5);
+        this.planet.scale.setTo((mass-700)/800 + .3, (mass-700)/800 + .3);
     }
 
     getX() {

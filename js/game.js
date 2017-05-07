@@ -8,7 +8,7 @@ const PROXIMITY = 100; // distance the rocket needs to be away from planet
 const BUFFER_ZONE = 400; // distance the rocket can stray from the bounds
 const UNIT_J = new Vector(0, -1);
 const THRUST = .1;
-const PLANET_MASS = 1135;
+const PLANET_MASS = 1300; // 800-1500
 
 var rocket;
 var planets;
@@ -144,7 +144,7 @@ function update() {
             nx = getRandomInt(100, game.width - 100);
             ny = getRandomInt(100, game.height - 100);
         }
-        mass = PLANET_MASS;
+        mass = getRandomInt(800, 1500);
         planets[1] = new Planet(game, nx, ny, mass);
         score++;
         this.score.setText("Score: " + score);
@@ -167,7 +167,7 @@ function update() {
             nx = getRandomInt(100, game.width - 100);
             ny = getRandomInt(100, game.height - 100);
         }
-        mass = PLANET_MASS;
+        mass = getRandomInt(800, 1500);
         planets[0] = new Planet(game, nx, ny, mass);
         score++;
         this.score.setText("Score: " + score);
