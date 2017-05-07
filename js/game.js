@@ -22,7 +22,8 @@ var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create
 
 function preload() {
     // load assets
-    game.load.image('rocket', 'assets/rocket.png');
+    game.load.image('rocketon', 'assets/rocketon.png');
+    game.load.image('rocketoff', 'assets/rocketoff.png');
     game.load.image('planetred', 'assets/planetred.png');
     game.load.image('planetgreen', 'assets/planetgreen.png');
     game.load.image('planetfuel', 'assets/planetfuel.png');
@@ -123,6 +124,7 @@ function update() {
             if(this.fuelLevel > 0) {
                 this.fuelLevel -= .3;
             }
+            rocket.loadTexture('rocketon');
         } else if(this.keys.down.isDown) { // backward thrust
             var unitVector = this.velocity.getUnitVector().getComponents();
             this.velocity = this.velocity.add(new Vector(
@@ -131,6 +133,9 @@ function update() {
             if(this.fuelLevel > 0) {
                 this.fuelLevel -= .3;
             }
+            rocket.loadTexture('rocketon');
+        } else {
+            rocket.loadTexture('rocketoff'); // THIS CAN BE OPTIMIZED
         }
     }
 
