@@ -10,6 +10,7 @@ const UNIT_J = new Vector(0, -1);
 const THRUST = .1;
 const PLANET_MASS = 1300; // 800-1500
 const FUEL_INTERVAL = 5; // every fifth planet
+const FUEL_USE = 0.3;
 
 var rocket;
 var planets;
@@ -41,7 +42,7 @@ function create() {
 
     // create asteroids
     var sqr, size;
-    for (var i = 0; i < 300; i++) {
+    for (var i = 0; i < 500; i++) {
         size = game.rnd.integerInRange(5, 16);
         sqr = game.add.graphics(game.rnd.integerInRange(0, game.world.width), game.rnd.integerInRange(0, game.world.height), bgGroup);
         sqr.beginFill(0x444444);
@@ -106,8 +107,8 @@ function create() {
 function update() {
     var accelerations = new Array();
 
-    // for each planet, append gravity force to accelerations
-    for(i = 0; i < planets.length; i++) {
+    for(var i = 0; i < planets.length; i++) {
+        // calculate acceleration due to gravity
         dx = rocket.getX() - planets[i].getX();
         dy = rocket.getY() - planets[i].getY();
         r = Math.abs(Math.hypot(dx, dy));
@@ -118,61 +119,53 @@ function update() {
         } else {
             accelerations.push(new Vector(-1 * mag * Math.cos(theta), -1 * mag * Math.sin(theta)));
         }
+
+        // check if within proximity of planet
+
+        // check if rocket has hit planet
+        if(planets[i].isOverlapping(rocket.getX(), rocket.getY())) {
+            rocket.setVelocity(new Vector(0, 0));
+            for(var i = 0; i < planets.length; i++) {
+                planets[i].setMass(0);
+            }
+            this.gameOver.setText("GAME OVER!\nPlanets: " + score);
+            gameOver = true;
+        }
+    }
+
+    // add thrust in forward direction of velocity
+    if(this.fuelLevel > 0 && gameOver == false && (this.keys.up.isDown || this.upKey.isDown)) {
+        var unitVector = [-1 * Math.cos(-1 * rocket.getDirection() - Math.PI / 2), Math.sin(-1 * rocket.getDirection() - Math.PI / 2)];
+        rocket.setVelocity(rocket.getVelocity().add(new Vector(THRUST * unitVector[0], THRUST * unitVector[1])));
+        if(this.fuelLevel > 0) {
+            this.fuelLevel -= FUEL_USE;
+        }
+        rocket.loadTexture('rocketon');
+    } else {
+        rocket.loadTexture('rocketoff');
+    }
+
+    // turn rocket (uses 1/3rd the fuel of forward thrust)
+    if(this.keys.left.isDown || this.leftKey.isDown) {
+        rocket.setDirection(rocket.getDirection() - 0.1);
+        if(this.fuelLevel > 0) {
+            this.fuelLevel -= FUEL_USE / 3;
+        }
+    }
+    if(this.keys.right.isDown || this.rightKey.isDown) {
+        rocket.setDirection(rocket.getDirection() + 0.1);
+        if(this.fuelLevel > 0) {
+            this.fuelLevel -= FUEL_USE / 3;
+        }
     }
 
     // add accelerations to velocity vector
     for(i = 0; i < accelerations.length; i++) {
         rocket.setVelocity(rocket.getVelocity().add(accelerations[i]));
     }
-
-    // add thrust in forward direction of velocity
-    if(this.fuelLevel > 0 && gameOver == false) {
-        if(this.keys.up.isDown || this.upKey.isDown) { // forward thrust
-            var unitVector = [-1 * Math.cos(-1 * rocket.getDirection() - Math.PI / 2), Math.sin(-1 * rocket.getDirection() - Math.PI / 2)];
-            //var unitVector = rocket.getVelocity().getUnitVector().getComponents();
-            rocket.setVelocity(rocket.getVelocity().add(new Vector(THRUST * unitVector[0], THRUST * unitVector[1])));
-            if(this.fuelLevel > 0) {
-                this.fuelLevel -= .3;
-            }
-            rocket.loadTexture('rocketon');
-        } /* else if(this.keys.down.isDown || this.downKey.isDown) { // backward thrust
-            var unitVector = rocket.getVelocity().getUnitVector().getComponents();
-            rocket.setVelocity(rocket.getVelocity().add(new Vector(-1 * THRUST * unitVector[0], -1 * THRUST * unitVector[1])));
-            if(this.fuelLevel > 0) {
-                this.fuelLevel -= .3;
-            }
-            rocket.loadTexture('rocketon');
-        } else {
-            rocket.loadTexture('rocketoff');
-        } */
-    }
-
     // increment position of rocket
     rocket.setX(rocket.getX() + rocket.getVelocity().getComponents()[0]);
     rocket.setY(rocket.getY() + rocket.getVelocity().getComponents()[1]);
-
-    // calculate rotation for rocket (in direction of velocity)
-    // direction is the radians away from straight up
-    /*if(rocket.getVelocity().x >= 0) {
-        rocket.setDirection(UNIT_J.angleBetween(rocket.getVelocity()));
-    } else {
-        rocket.setDirection(-1 * UNIT_J.angleBetween(rocket.getVelocity()));
-    }*/
-    if(this.keys.left.isDown || this.leftKey.isDown) {
-        rocket.setDirection(rocket.getDirection() - 0.1);
-    }
-    if(this.keys.right.isDown || this.rightKey.isDown) {
-        rocket.setDirection(rocket.getDirection() + 0.1);
-    }
-
-    // check if rocket has hit planet
-    if(planets[0].isOverlapping(rocket.getX(), rocket.getY()) || planets[1].isOverlapping(rocket.getX(), rocket.getY())) {    // pause the game and display game over text
-        rocket.setVelocity(new Vector(0, 0));
-        planets[0].setMass(0);
-        planets[1].setMass(0);
-        this.gameOver.setText("GAME OVER!\nPlanets: " + score);
-        gameOver = true;
-    }
 
     // check if within proximity of planet
     if(calculateDistance(planets[0]) && (curPlanetIndex === 2 || curPlanetIndex != 0)) {
@@ -253,8 +246,9 @@ function update() {
     // check bounds
     if(rocket.getX() < -1 * BUFFER_ZONE || rocket.getX() > game.world.width + BUFFER_ZONE || rocket.getY() < -1 * BUFFER_ZONE || rocket.getY() > game.world.height + BUFFER_ZONE) {    // pause the game and display game over text
         rocket.setVelocity(new Vector(0, 0));
-        planets[0].setMass(0);
-        planets[1].setMass(0);
+        for(var i = 0; i < planets.length; i++) {
+            planets[i].setMass(0);
+        }
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
         gameOver = true;
     }
