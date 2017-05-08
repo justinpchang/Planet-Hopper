@@ -17,6 +17,7 @@ var curPlanetIndex = 2; // 0 - planet0, 1 - planet1, 2 - new
 var score = 0;
 var bgGroup; // group of squares for background asteroids
 var circles; // graphics object for drawing proximity circles around planets
+var gameOver = false;
 
 // create the game
 var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
@@ -52,12 +53,7 @@ function create() {
     circles = game.add.graphics(0, 0);
 
     // add rocket
-    rocket = game.add.sprite(350, 400, 'rocket');
-    rocket.anchor.set(0.5, 0.5);
-
-    // initialize movement variables
-    this.velocity = new Vector(0, -1);
-    this.direction = 0;
+    rocket = new Rocket(game, 350, 400, new Vector(0, -1), 0);
 
     // create first two planets
     var planet1 = new Planet(game, 500, 300, PLANET_MASS);
@@ -71,6 +67,9 @@ function create() {
 
     // add key input to the game
     this.keys = game.input.keyboard.createCursorKeys();
+    this.upKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
+    this.downKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
+    this.restartKey = game.input.keyboard.addKey(Phaser.Keyboard.R);
 
     // create text for score in bottom left
     var scoreStyle = { font: "20px Arial", fill: "#ff0044", align: "left" };
@@ -100,12 +99,12 @@ function update() {
 
     // for each planet, append gravity force to accelerations
     for(i = 0; i < planets.length; i++) {
-        dx = rocket.x - planets[i].getX();
-        dy = rocket.y - planets[i].getY();
+        dx = rocket.getX() - planets[i].getX();
+        dy = rocket.getY() - planets[i].getY();
         r = Math.abs(Math.hypot(dx, dy));
         theta = Math.atan(dy / dx);
         mag = calculateGravity(planets[i].getMass(), r);
-        if(rocket.x < planets[i].getX()) {
+        if(rocket.getX() < planets[i].getX()) {
             accelerations.push(new Vector(mag * Math.cos(theta), mag * Math.sin(theta)));
         } else {
             accelerations.push(new Vector(-1 * mag * Math.cos(theta), -1 * mag * Math.sin(theta)));
@@ -113,50 +112,50 @@ function update() {
     }
 
     // add accelerations to velocity vector
-    this.velocity = this.velocity.add(accelerations[0]).add(accelerations[1]);
+    for(i = 0; i < accelerations.length; i++) {
+        rocket.setVelocity(rocket.getVelocity().add(accelerations[i]));
+    }
 
     // add thrust in forward direction of velocity
-    if(this.fuelLevel > 0) {
-        if(this.keys.up.isDown) { // forward thrust
-            var unitVector = this.velocity.getUnitVector().getComponents();
-            this.velocity = this.velocity.add(new Vector(
-                THRUST * unitVector[0],
-                THRUST * unitVector[1]));
+    if(this.fuelLevel > 0 && gameOver == false) {
+        if(this.keys.up.isDown || this.upKey.isDown) { // forward thrust
+            var unitVector = rocket.getVelocity().getUnitVector().getComponents();
+            rocket.setVelocity(rocket.getVelocity().add(new Vector(THRUST * unitVector[0], THRUST * unitVector[1])));
             if(this.fuelLevel > 0) {
                 this.fuelLevel -= .3;
             }
             rocket.loadTexture('rocketon');
-        } else if(this.keys.down.isDown) { // backward thrust
-            var unitVector = this.velocity.getUnitVector().getComponents();
-            this.velocity = this.velocity.add(new Vector(
-                -1 * THRUST * unitVector[0],
-                -1 * THRUST * unitVector[1]));
+        } else if(this.keys.down.isDown || this.downKey.isDown) { // backward thrust
+            var unitVector = rocket.getVelocity().getUnitVector().getComponents();
+            rocket.setVelocity(rocket.getVelocity().add(new Vector(-1 * THRUST * unitVector[0], -1 * THRUST * unitVector[1])));
             if(this.fuelLevel > 0) {
                 this.fuelLevel -= .3;
             }
             rocket.loadTexture('rocketon');
         } else {
-            rocket.loadTexture('rocketoff'); // THIS CAN BE OPTIMIZED
+            rocket.loadTexture('rocketoff');
         }
     }
 
     // increment position of rocket
-    rocket.x += this.velocity.getComponents()[0];
-    rocket.y += this.velocity.getComponents()[1];
+    rocket.setX(rocket.getX() + rocket.getVelocity().getComponents()[0]);
+    rocket.setY(rocket.getY() + rocket.getVelocity().getComponents()[1]);
 
     // calculate rotation for rocket (in direction of velocity)
     // direction is the radians away from straight up
-    if(this.velocity.x >= 0) {
-        this.direction = UNIT_J.angleBetween(this.velocity);
+    if(rocket.getVelocity().x >= 0) {
+        rocket.setDirection(UNIT_J.angleBetween(rocket.getVelocity()));
     } else {
-        this.direction = -1 * UNIT_J.angleBetween(this.velocity);
+        rocket.setDirection(-1 * UNIT_J.angleBetween(rocket.getVelocity()));
     }
-    rocket.rotation = this.direction;
 
     // check if rocket has hit planet
-    if(planets[0].isOverlapping(rocket.x, rocket.y) || planets[1].isOverlapping(rocket.x, rocket.y)) {    // pause the game and display game over text
-        game.paused = true;
+    if(planets[0].isOverlapping(rocket.getX(), rocket.getY()) || planets[1].isOverlapping(rocket.getX(), rocket.getY())) {    // pause the game and display game over text
+        rocket.setVelocity(new Vector(0, 0));
+        planets[0].setMass(0);
+        planets[1].setMass(0);
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
+        gameOver = true;
     }
 
     // check if within proximity of planet
@@ -236,19 +235,61 @@ function update() {
     }
 
     // check bounds
-    if(rocket.x < -1 * BUFFER_ZONE || rocket.x > game.width + BUFFER_ZONE || rocket.y < -1 * BUFFER_ZONE || rocket.y > game.height + BUFFER_ZONE) {    // pause the game and display game over text
-        game.paused = true;
+    if(rocket.getX() < -1 * BUFFER_ZONE || rocket.getX() > game.width + BUFFER_ZONE || rocket.getY() < -1 * BUFFER_ZONE || rocket.getY() > game.height + BUFFER_ZONE) {    // pause the game and display game over text
+        rocket.setVelocity(new Vector(0, 0));
+        planets[0].setMass(0);
+        planets[1].setMass(0);
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
+        gameOver = true;
     }
 
     // update fuel bar
     this.fuelBar.setPercent(this.fuelLevel);
     this.fuelLabel.setText("Fuel: " + Math.floor(this.fuelLevel) + "%");
+
+    // check if restart game
+    if(this.restartKey.isDown) {
+        // reset rocket
+        rocket.setX(350);
+        rocket.setY(400);
+
+        // reset movement variables
+        rocket.setVelocity(new Vector(0, -1));
+        rocket.setDirection(0)
+
+        // create first two planets
+        planets[0].setX(500);
+        planets[0].setY(300);
+        planets[0].setMass(PLANET_MASS);
+        planets[0].changeColorGreen();
+        planets[1].setX(100);
+        planets[1].setY(200);
+        planets[1].setMass(PLANET_MASS);
+        planets[1].changeColorGreen();
+
+        // remake proximity circles
+        circles.destroy();
+        circles = game.add.graphics(0, 0);
+        circles.lineStyle(1, 0xFF00FF);
+        circles.drawCircle(planets[0].x, planets[0].y, 100);
+        circles.drawCircle(planets[1].x, planets[1].y, 100);
+        circles.lineStyle(0, 0xFF00FF);
+
+        // reset score
+        score = 0;
+
+        // reset fuel bar
+        this.fuelLevel = 100;
+
+        // take out game over message
+        this.gameOver.setText("");
+        gameOver = false;
+    }
 }
 
 function render() {
     // display info about the rocket
-    game.debug.spriteInfo(rocket, 32, 32);
+    //game.debug.spriteInfo(rocket, 32, 32);
     // display fps
     game.debug.text(game.time.fps || '--', 2, 14, "#00ff00");
 }
@@ -261,8 +302,8 @@ function calculateGravity(m, r) {
 
 // function to calculate distance from rocket and planet
 function calculateDistance(planet) {
-    dx = planet.getX() - rocket.x;
-    dy = planet.getY() - rocket.y;
+    dx = planet.getX() - rocket.getX();
+    dy = planet.getY() - rocket.getY();
     dist = Math.hypot(dx, dy);
 
     return dist <= PROXIMITY;
