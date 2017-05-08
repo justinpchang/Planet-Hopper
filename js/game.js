@@ -69,6 +69,8 @@ function create() {
     this.keys = game.input.keyboard.createCursorKeys();
     this.upKey = game.input.keyboard.addKey(Phaser.Keyboard.W);
     this.downKey = game.input.keyboard.addKey(Phaser.Keyboard.S);
+    this.leftKey = game.input.keyboard.addKey(Phaser.Keyboard.A);
+    this.rightKey = game.input.keyboard.addKey(Phaser.Keyboard.D);
     this.restartKey = game.input.keyboard.addKey(Phaser.Keyboard.R);
 
     // create text for score in bottom left
@@ -126,13 +128,14 @@ function update() {
     // add thrust in forward direction of velocity
     if(this.fuelLevel > 0 && gameOver == false) {
         if(this.keys.up.isDown || this.upKey.isDown) { // forward thrust
-            var unitVector = rocket.getVelocity().getUnitVector().getComponents();
+            var unitVector = [-1 * Math.cos(-1 * rocket.getDirection() - Math.PI / 2), Math.sin(-1 * rocket.getDirection() - Math.PI / 2)];
+            //var unitVector = rocket.getVelocity().getUnitVector().getComponents();
             rocket.setVelocity(rocket.getVelocity().add(new Vector(THRUST * unitVector[0], THRUST * unitVector[1])));
             if(this.fuelLevel > 0) {
                 this.fuelLevel -= .3;
             }
             rocket.loadTexture('rocketon');
-        } else if(this.keys.down.isDown || this.downKey.isDown) { // backward thrust
+        } /* else if(this.keys.down.isDown || this.downKey.isDown) { // backward thrust
             var unitVector = rocket.getVelocity().getUnitVector().getComponents();
             rocket.setVelocity(rocket.getVelocity().add(new Vector(-1 * THRUST * unitVector[0], -1 * THRUST * unitVector[1])));
             if(this.fuelLevel > 0) {
@@ -141,7 +144,7 @@ function update() {
             rocket.loadTexture('rocketon');
         } else {
             rocket.loadTexture('rocketoff');
-        }
+        } */
     }
 
     // increment position of rocket
@@ -150,10 +153,16 @@ function update() {
 
     // calculate rotation for rocket (in direction of velocity)
     // direction is the radians away from straight up
-    if(rocket.getVelocity().x >= 0) {
+    /*if(rocket.getVelocity().x >= 0) {
         rocket.setDirection(UNIT_J.angleBetween(rocket.getVelocity()));
     } else {
         rocket.setDirection(-1 * UNIT_J.angleBetween(rocket.getVelocity()));
+    }*/
+    if(this.keys.left.isDown || this.leftKey.isDown) {
+        rocket.setDirection(rocket.getDirection() - 0.1);
+    }
+    if(this.keys.right.isDown || this.rightKey.isDown) {
+        rocket.setDirection(rocket.getDirection() + 0.1);
     }
 
     // check if rocket has hit planet
