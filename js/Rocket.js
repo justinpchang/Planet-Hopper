@@ -5,8 +5,13 @@ class Rocket {
         this.rocket.x = x;
         this.rocket.y = y;
         this.rocket.anchor.set(0.5, 0.5);
+        this.rocket.scale.setTo(0.6);
         this.velocity = velocity;
         this.direction = direction;
+    }
+
+    getSprite() {
+        return this.rocket;
     }
 
     getX() {

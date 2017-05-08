@@ -5,7 +5,7 @@
  *************************************/
 
 const PROXIMITY = 100; // distance the rocket needs to be away from planet
-const BUFFER_ZONE = 200; // distance the rocket can stray from the bounds
+const BUFFER_ZONE = 0; // distance the rocket can stray from the bounds
 const UNIT_J = new Vector(0, -1);
 const THRUST = .1;
 const PLANET_MASS = 1300; // 800-1500
@@ -36,14 +36,14 @@ function preload() {
 
 function create() {
     // initialize game settings
-    game.world.setBounds(0, 0, game.width, game.height);
+    game.world.setBounds(0, 0, 2000, 2000);
     game.stage.disableVisibilityChange = true;
 
     // create asteroids
     var sqr, size;
     for (var i = 0; i < 300; i++) {
         size = game.rnd.integerInRange(5, 16);
-        sqr = game.add.graphics(game.rnd.integerInRange(0, game.width), game.rnd.integerInRange(0, game.height), bgGroup);
+        sqr = game.add.graphics(game.rnd.integerInRange(0, game.world.width), game.rnd.integerInRange(0, game.world.height), bgGroup);
         sqr.beginFill(0x444444);
         sqr.drawRect(size * -0.5, size * -0.5, size, size); // center the square on its position
         sqr.endFill();
@@ -74,11 +74,13 @@ function create() {
     // create text for score in bottom left
     var scoreStyle = { font: "20px Arial", fill: "#ff0044", align: "left" };
     this.score = game.add.text(25, game.height - 25, "Score: " + score, scoreStyle);
+    this.score.fixedToCamera = true;
 
     // create text for game over text in the center
     var gameOverStyle = { font: "50px Arial", fill: "#ff0044", align: "center" };
-    this.gameOver = game.add.text(game.world.centerX, game.world.centerY, "", gameOverStyle);
+    this.gameOver = game.add.text(game.width * 0.5, game.height * 0.5, "", gameOverStyle);
     this.gameOver.anchor.set(0.5);
+    this.gameOver.fixedToCamera = true;
 
     // create the fuel bar (using HealthBar.js plugin)
     var barConfig = {
@@ -86,12 +88,17 @@ function create() {
         y: game.height - 20,
         width: 300,
         height: 25,
-        animationDuration: 1
+        animationDuration: 1,
+        isFixedToCamera: true
     }
     this.fuelBar = new HealthBar(this.game, barConfig);
     var fuelStyle = { font: "15px Arial", fill: "#ff0044", align: "left" };
     this.fuelLabel = game.add.text(game.width * .5 - 140, game.height - 25, "Fuel: 100%", fuelStyle);
     this.fuelLevel = 100;
+    this.fuelLabel.fixedToCamera = true;
+
+    // create camera
+    game.camera.follow(rocket.getSprite());
 }
 
 function update() {
@@ -172,11 +179,11 @@ function update() {
         curPlanetIndex = 0;
         planets[0].changeColorRed();
         // find good x and y (OPTIMIZE THIS)
-        var nx = getRandomInt(100, game.width - 100);
-        var ny = getRandomInt(100, game.height - 100);
+        var nx = getRandomInt(100, game.world.width - 100);
+        var ny = getRandomInt(100, game.world.height - 100);
         while(Math.abs(nx - planets[0].getX()) + Math.abs(ny - planets[0].getY()) < 400) {
-            nx = getRandomInt(100, game.width - 100);
-            ny = getRandomInt(100, game.height - 100);
+            nx = getRandomInt(100, game.world.width - 100);
+            ny = getRandomInt(100, game.world.height - 100);
         }
         var mass = getRandomInt(800, 1500);
         planets[1].setX(nx);
@@ -209,11 +216,11 @@ function update() {
         curPlanetIndex = 1;
         planets[1].changeColorRed();
         // find good x and y
-        var nx = getRandomInt(100, game.width - 100);
-        var ny = getRandomInt(100, game.height - 100);
+        var nx = getRandomInt(100, game.world.width - 100);
+        var ny = getRandomInt(100, game.world.height - 100);
         while(Math.abs(nx - planets[1].getX()) + Math.abs(ny - planets[1].getY()) < 400) {
-            nx = getRandomInt(100, game.width - 100);
-            ny = getRandomInt(100, game.height - 100);
+            nx = getRandomInt(100, game.world.width - 100);
+            ny = getRandomInt(100, game.world.height - 100);
         }
         var mass = getRandomInt(800, 1500);
         planets[0].setX(nx);
@@ -235,7 +242,7 @@ function update() {
     }
 
     // check bounds
-    if(rocket.getX() < -1 * BUFFER_ZONE || rocket.getX() > game.width + BUFFER_ZONE || rocket.getY() < -1 * BUFFER_ZONE || rocket.getY() > game.height + BUFFER_ZONE) {    // pause the game and display game over text
+    if(rocket.getX() < -1 * BUFFER_ZONE || rocket.getX() > game.world.width + BUFFER_ZONE || rocket.getY() < -1 * BUFFER_ZONE || rocket.getY() > game.world.height + BUFFER_ZONE) {    // pause the game and display game over text
         rocket.setVelocity(new Vector(0, 0));
         planets[0].setMass(0);
         planets[1].setMass(0);

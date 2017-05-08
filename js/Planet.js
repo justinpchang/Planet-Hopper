@@ -58,4 +58,8 @@ class Planet {
     isOverlapping(x, y) {
         return this.planet.getBounds().contains(x, y);
     }
+
+    isVisible() {
+        return this.planet.inCamera;
+    }
 }
