@@ -15,17 +15,40 @@ class Planet {
         return this.x;
     }
 
+    setX(x) {
+        this.x = x;
+        this.planet.x = x;
+    }
+
     getY() {
         return this.y;
+    }
+
+    setY(y) {
+        this.y = y;
+        this.planet.y = y;
     }
 
     getMass() {
         return this.mass;
     }
 
+    setMass(mass) {
+        this.mass = mass;
+        this.planet.scale.setTo((mass-700)/800 + .3, (mass-700)/800 + .3);
+    }
+
+    makeFuelPlanet() {
+        this.planet.loadTexture('planetfuel');
+    }
+
     // change color of planet to red once the planet has been 'visited'
-    changeColor() {
+    changeColorRed() {
         this.planet.loadTexture('planetred');
+    }
+
+    changeColorGreen() {
+        this.planet.loadTexture('planetgreen');
     }
 
     destroy() {

@@ -22,6 +22,7 @@ var circles; // graphics object for drawing proximity circles around planets
 var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
 
 function preload() {
+    game.forceSingleUpdate = true;
     // load assets
     game.load.image('rocketon', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAtCAYAAAC53tuhAAAAfUlEQVRYhe3VsQ2AMBADwJ+BxViIIiWrpWOjpwKliCUeeAVhW3ITKTl3MQtmWyfvNfpOOBwwwtJHcMO11m4F304pxY9G4fauYMGCyWGEoQoW/E04iqEKFjwWfgsLj+CAszE4gg9G4fudhsFtfDY/uzQF548wbvjKiBTsV/AO3DCi7ESmZbwAAAAASUVORK5CYII=');
     game.load.image('rocketoff', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAtCAYAAAC53tuhAAAAaklEQVRYhe3VsQ3AIBBDUWZg4iuz2nVsBFWkFLhwFASR/SWX4V2XUsjaVfts7Dt0GjDClh+hDWfmdIZfFxH9Hgs/vzVs2LA4jDA0w4bPhFkMzbDhvfBXGH2EBrwag0fowSi9v9M22LnfNgB+8SHvtb/YqAAAAABJRU5ErkJggg==');
@@ -170,9 +171,7 @@ function update() {
         }
 
         curPlanetIndex = 0;
-        planets[0].changeColor();
-        // replace planet 2
-        planets[1].destroy();
+        planets[0].changeColorRed();
         // find good x and y (OPTIMIZE THIS)
         var nx = getRandomInt(100, game.width - 100);
         var ny = getRandomInt(100, game.height - 100);
@@ -181,9 +180,14 @@ function update() {
             ny = getRandomInt(100, game.height - 100);
         }
         var mass = getRandomInt(800, 1500);
-        console.log(score);
-        var fuel = (score % FUEL_INTERVAL == 4 && score != 0);
-        planets[1] = new Planet(game, nx, ny, mass, fuel);
+        planets[1].setX(nx);
+        planets[1].setY(ny);
+        planets[1].setMass(mass);
+        if(score % FUEL_INTERVAL == 4 && score != 0) {
+            planets[1].makeFuelPlanet();
+        } else {
+            planets[1].changeColorGreen();
+        }
         score++;
         this.score.setText("Score: " + score);
         // remake proximity circles
@@ -204,9 +208,7 @@ function update() {
         }
 
         curPlanetIndex = 1;
-        planets[1].changeColor();
-        // replace planet 1
-        planets[0].destroy();
+        planets[1].changeColorRed();
         // find good x and y
         var nx = getRandomInt(100, game.width - 100);
         var ny = getRandomInt(100, game.height - 100);
@@ -215,9 +217,14 @@ function update() {
             ny = getRandomInt(100, game.height - 100);
         }
         var mass = getRandomInt(800, 1500);
-        console.log(score);
-        var fuel = (score % FUEL_INTERVAL == 4 && score != 0);
-        planets[0] = new Planet(game, nx, ny, mass, fuel);
+        planets[0].setX(nx);
+        planets[0].setY(ny);
+        planets[0].setMass(mass);
+        if(score % FUEL_INTERVAL == 4 && score != 0) {
+            planets[0].makeFuelPlanet();
+        } else {
+            planets[0].changeColorGreen();
+        }
         score++;
         this.score.setText("Score: " + score);
         // remake proximity circles
