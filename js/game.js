@@ -23,11 +23,11 @@ var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create
 
 function preload() {
     // load assets
-    game.load.image('rocketon', 'assets/rocketon.png');
-    game.load.image('rocketoff', 'assets/rocketoff.png');
-    game.load.image('planetred', 'assets/planetred.png');
-    game.load.image('planetgreen', 'assets/planetgreen.png');
-    game.load.image('planetfuel', 'assets/planetfuel.png');
+    game.load.image('rocketon', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAtCAYAAAC53tuhAAAAfUlEQVRYhe3VsQ2AMBADwJ+BxViIIiWrpWOjpwKliCUeeAVhW3ITKTl3MQtmWyfvNfpOOBwwwtJHcMO11m4F304pxY9G4fauYMGCyWGEoQoW/E04iqEKFjwWfgsLj+CAszE4gg9G4fudhsFtfDY/uzQF548wbvjKiBTsV/AO3DCi7ESmZbwAAAAASUVORK5CYII=');
+    game.load.image('rocketoff', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAtCAYAAAC53tuhAAAAaklEQVRYhe3VsQ3AIBBDUWZg4iuz2nVsBFWkFLhwFASR/SWX4V2XUsjaVfts7Dt0GjDClh+hDWfmdIZfFxH9Hgs/vzVs2LA4jDA0w4bPhFkMzbDhvfBXGH2EBrwag0fowSi9v9M22LnfNgB+8SHvtb/YqAAAAABJRU5ErkJggg==');
+    game.load.image('planetred', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAjElEQVRYhe3YQQ6AIAxEUW7APbimK0+tW00w1lTKrw7JrPs2BDqlOM5S62aJZ4YLtLZmShgYC3wKsoJxsNego2FuKBoYCetBcwNn4kxILDD6UliQJ6iAnwaSYD2ogAIKKKCAdCD+qRPwF0D8lz8NcDYy/158RGKrjxTAKCi2JxzetOIq4DTAO/BVPDN2ps8heDyuIcwAAAAASUVORK5CYII=');
+    game.load.image('planetgreen', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABGUlEQVRYhe3ZwQqDMAwAUP+h8bBkHxoQBEEE0ZsI+9vs4HTWbdiunYvQQo7Wp6apxiwLGMS5uETIObzGhUHmwMoI9eAUWBlZH/sTHJZGqIZndCDXm1tQB9axWJq4SCxAqHEH7YIbECwi3ElkEGQQao3QGBE4TnPO83+HW+fYEA+3IAc7R/1xHjkWjO08kMjTVR2FW5C94+NWDcTisSB+kHNOOdmaz6sbSyPUQNTV6o0cHyVoWycvPBXQf8FeoPVmx0nAUODRdW8XuK6LxPlfysousgchziUBEzABEzABtQPVb3WneFlIwFCg+lf+U3w0LUhW/Nl5CmCWKW99WEitzaMFyYrbbxZUawPTQmpuAc9DdRP93TjiN8QdogrOqV9CmaQAAAAASUVORK5CYII=');
+    game.load.image('planetfuel', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABdElEQVRYhe3ZwWrDMAwAUH9Cwcqh8j5UEAgUSqAktxLYB+w/tUNqL3GbWXbsYNYZdGvS11hWbFWpHcNQw5LY8x1R40zANvCi2YwgCrxoXl5bBIedZnOFnxiAPz5lYQZYXYudzovEFtj0clAQ3ANjm+FJIgEjAZubZjNlBE7zPe3903DLHLvnwznkfZ2j8biIHNuNHSKQSPOvOgrnkKNwuqsGYvtYEAVyTpSTN729urHTbHrIulp/C6WUC4ecHiXIr5NnmgvoUU9riVsCHfTqvXGkwK/TSRwxT64YMPTZFNxLoLTupQJDU/oEXNZFQ424rMRMsY1YnEOOwIYaLg70kVUCLVKKywL0p24rpDlbBTAG+V7AHAX8vYHS6f2bwNRXXUng0xEgZbNQMgez7Gb+geRt/SVb/tLAzS2/QwYOTSWBwUOTQ9L2sTMGEg3McS6uAqhU5a2PFbLW5pFDUsXttxW01gbmCllzC9iOqpvor8YRf0N8Ay0wenXPjGwuAAAAAElFTkSuQmCC');
     // set time mode for FPS counter
     game.time.advancedTiming = true;
 }
