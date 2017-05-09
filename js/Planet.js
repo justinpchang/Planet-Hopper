@@ -1,14 +1,11 @@
 class Planet {
-    constructor(game, x, y, mass, fuelPlanet) {
+    constructor(game, x, y, mass) {
         this.x = x;
         this.y = y;
         this.mass = mass;
         this.planet = game.add.sprite(x, y, 'planetgreen');
         this.planet.anchor.set(0.5, 0.5);
         this.planet.scale.setTo((mass-700)/800 + .3, (mass-700)/800 + .3);
-        if(fuelPlanet) {
-            this.planet.loadTexture('planetfuel');
-        }
     }
 
     getX() {
@@ -38,6 +35,10 @@ class Planet {
         this.planet.scale.setTo((mass-700)/800 + .3, (mass-700)/800 + .3);
     }
 
+    endGameState() {
+        this.mass = 0;
+    }
+
     makeFuelPlanet() {
         this.planet.loadTexture('planetfuel');
     }
@@ -56,7 +57,7 @@ class Planet {
     }
 
     isOverlapping(x, y) {
-        return this.planet.getBounds().contains(x, y);
+        return Math.hypot(x - this.planet.x, y - this.planet.y) < this.planet.width/2;
     }
 
     isVisible() {

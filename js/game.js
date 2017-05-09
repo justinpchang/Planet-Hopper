@@ -7,10 +7,11 @@
 const PROXIMITY = 100; // distance the rocket needs to be away from planet
 const BUFFER_ZONE = 0; // distance the rocket can stray from the bounds
 const UNIT_J = new Vector(0, -1);
-const THRUST = .1;
+const THRUST = .05;
 const PLANET_MASS = 1300; // 800-1500
 const FUEL_INTERVAL = 5; // every fifth planet
-const FUEL_USE = 0.3;
+const FUEL_USE = 0.1;
+const TURNING_SPEED = 0.05;
 
 var rocket;
 var planets;
@@ -31,6 +32,7 @@ function preload() {
     game.load.image('planetred', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAjElEQVRYhe3YQQ6AIAxEUW7APbimK0+tW00w1lTKrw7JrPs2BDqlOM5S62aJZ4YLtLZmShgYC3wKsoJxsNego2FuKBoYCetBcwNn4kxILDD6UliQJ6iAnwaSYD2ogAIKKKCAdCD+qRPwF0D8lz8NcDYy/158RGKrjxTAKCi2JxzetOIq4DTAO/BVPDN2ps8heDyuIcwAAAAASUVORK5CYII=');
     game.load.image('planetgreen', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABGUlEQVRYhe3ZwQqDMAwAUP+h8bBkHxoQBEEE0ZsI+9vs4HTWbdiunYvQQo7Wp6apxiwLGMS5uETIObzGhUHmwMoI9eAUWBlZH/sTHJZGqIZndCDXm1tQB9axWJq4SCxAqHEH7YIbECwi3ElkEGQQao3QGBE4TnPO83+HW+fYEA+3IAc7R/1xHjkWjO08kMjTVR2FW5C94+NWDcTisSB+kHNOOdmaz6sbSyPUQNTV6o0cHyVoWycvPBXQf8FeoPVmx0nAUODRdW8XuK6LxPlfysousgchziUBEzABEzABtQPVb3WneFlIwFCg+lf+U3w0LUhW/Nl5CmCWKW99WEitzaMFyYrbbxZUawPTQmpuAc9DdRP93TjiN8QdogrOqV9CmaQAAAAASUVORK5CYII=');
     game.load.image('planetfuel', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABdElEQVRYhe3ZwWrDMAwAUH9Cwcqh8j5UEAgUSqAktxLYB+w/tUNqL3GbWXbsYNYZdGvS11hWbFWpHcNQw5LY8x1R40zANvCi2YwgCrxoXl5bBIedZnOFnxiAPz5lYQZYXYudzovEFtj0clAQ3ANjm+FJIgEjAZubZjNlBE7zPe3903DLHLvnwznkfZ2j8biIHNuNHSKQSPOvOgrnkKNwuqsGYvtYEAVyTpSTN729urHTbHrIulp/C6WUC4ecHiXIr5NnmgvoUU9riVsCHfTqvXGkwK/TSRwxT64YMPTZFNxLoLTupQJDU/oEXNZFQ424rMRMsY1YnEOOwIYaLg70kVUCLVKKywL0p24rpDlbBTAG+V7AHAX8vYHS6f2bwNRXXUng0xEgZbNQMgez7Gb+geRt/SVb/tLAzS2/QwYOTSWBwUOTQ9L2sTMGEg3McS6uAqhU5a2PFbLW5pFDUsXttxW01gbmCllzC9iOqpvor8YRf0N8Ay0wenXPjGwuAAAAAElFTkSuQmCC');
+    game.load.image('star', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAABIklEQVR4nO3bMQ7EIBBDUe5/51W2ZaWtwsDH8C2597wyEa1tkOfTnjeld2N5C3Y16Cy0ozFXox2DSYNFQ9JIsYg0TDQkjRGLSANEQ9JHRyPSx0Yj0kdGI9LHRSPSR0Uj0sdEI9JH0BWQBKTH71LxCER68G4VbxUiPXL3CjgTkB6XUgEF3BCQHpVWAQXcCJAek1oBBRQwuuJVINID0iuggAJGV0ABBYyugAIKGF0BBRQwun6RGcUTUEABU+ufuSo8AQXkAUUcxBNQQB5QxEE8AQsARRzEE7EAT8ACQBEH8UQswBPQV+s83q2IpXi3IU7BuwVxKt7piEvwTkVcincaIoJ3AiTt9hMaIxqvDw0TC9eHRorG60ODxcL9i2iFEa04yWBfDcjIzwFeD38AAAAASUVORK5CYII=');
     // set time mode for FPS counter
     game.time.advancedTiming = true;
 }
@@ -126,7 +128,7 @@ function update() {
         if(planets[i].isOverlapping(rocket.getX(), rocket.getY())) {
             rocket.setVelocity(new Vector(0, 0));
             for(var i = 0; i < planets.length; i++) {
-                planets[i].setMass(0);
+                planets[i].endGameState();
             }
             this.gameOver.setText("GAME OVER!\nPlanets: " + score);
             gameOver = true;
@@ -134,27 +136,23 @@ function update() {
     }
 
     // add thrust in forward direction of velocity
-    if(this.fuelLevel > 0 && gameOver == false && (this.keys.up.isDown || this.upKey.isDown)) {
+    if(this.fuelLevel > 0 && gameOver == false && this.fuelLevel > 0 && (this.keys.up.isDown || this.upKey.isDown)) {
         var unitVector = [-1 * Math.cos(-1 * rocket.getDirection() - Math.PI / 2), Math.sin(-1 * rocket.getDirection() - Math.PI / 2)];
         rocket.setVelocity(rocket.getVelocity().add(new Vector(THRUST * unitVector[0], THRUST * unitVector[1])));
-        if(this.fuelLevel > 0) {
-            this.fuelLevel -= FUEL_USE;
-        }
+        this.fuelLevel -= FUEL_USE;
         rocket.loadTexture('rocketon');
     } else {
         rocket.loadTexture('rocketoff');
     }
 
     // turn rocket (uses 1/3rd the fuel of forward thrust)
-    if(this.keys.left.isDown || this.leftKey.isDown) {
-        rocket.setDirection(rocket.getDirection() - 0.1);
-        if(this.fuelLevel > 0) {
+    if(this.fuelLevel > 0 && gameOver == false) {
+        if(this.keys.left.isDown || this.leftKey.isDown) {
+            rocket.setDirection(rocket.getDirection() - 0.05);
             this.fuelLevel -= FUEL_USE / 3;
         }
-    }
-    if(this.keys.right.isDown || this.rightKey.isDown) {
-        rocket.setDirection(rocket.getDirection() + 0.1);
-        if(this.fuelLevel > 0) {
+        if(this.keys.right.isDown || this.rightKey.isDown) {
+            rocket.setDirection(rocket.getDirection() + 0.05);
             this.fuelLevel -= FUEL_USE / 3;
         }
     }
@@ -247,7 +245,7 @@ function update() {
     if(rocket.getX() < -1 * BUFFER_ZONE || rocket.getX() > game.world.width + BUFFER_ZONE || rocket.getY() < -1 * BUFFER_ZONE || rocket.getY() > game.world.height + BUFFER_ZONE) {    // pause the game and display game over text
         rocket.setVelocity(new Vector(0, 0));
         for(var i = 0; i < planets.length; i++) {
-            planets[i].setMass(0);
+            planets[i].endGameState();
         }
         this.gameOver.setText("GAME OVER!\nPlanets: " + score);
         gameOver = true;
@@ -267,7 +265,15 @@ function update() {
         rocket.setVelocity(new Vector(0, -1));
         rocket.setDirection(0)
 
+        // delete two old planets
+        for(var i = 0; i < planets.length; i++) {
+            planets[i].destroy();
+        }
+
         // create first two planets
+        var planet0 = new Planet(game, 500, 300, PLANET_MASS);
+        var planet1 = new Planet(game, 100, 200, PLANET_MASS);
+        /*
         planets[0].setX(500);
         planets[0].setY(300);
         planets[0].setMass(PLANET_MASS);
@@ -276,6 +282,8 @@ function update() {
         planets[1].setY(200);
         planets[1].setMass(PLANET_MASS);
         planets[1].changeColorGreen();
+        */
+        planets = [planet0, planet1];
 
         // remake proximity circles
         circles.destroy();
