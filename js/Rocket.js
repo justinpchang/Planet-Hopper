@@ -8,6 +8,11 @@ class Rocket {
         this.rocket.scale.setTo(0.6);
         this.velocity = velocity;
         this.direction = direction;
+
+        /*this.mini = game.add.sprite(x * 150 / game.world.width, y * 150 / game.world.height, 'minimaprocket');
+        this.mini.anchor.set(0.5, 0.5);
+        this.mini.scale.setTo(0.333333333, 0.333333333);
+        this.mini.fixedToCamera = true;*/
     }
 
     getSprite() {

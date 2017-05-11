@@ -7,13 +7,15 @@
 const PROXIMITY = 100; // distance the rocket needs to be away from planet
 const BUFFER_ZONE = 0; // distance the rocket can stray from the bounds
 const UNIT_J = new Vector(0, -1);
-const THRUST = .02;
+const THRUST = .03;
 const PLANET_MASS = 1300; // 800-1500
 const FUEL_INTERVAL = 5; // every fifth planet
 const FUEL_USE = 0.05;
 const TURNING_SPEED = 0.05;
 
 var rocket;
+var miniRocket;
+var graphics;
 var planets, stars;
 var curPlanetIndex = 2; // 0 - planet0, 1 - planet1, 2 - new
 var score = 0;
@@ -33,6 +35,7 @@ function preload() {
     game.load.image('planetgreen', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABGUlEQVRYhe3ZwQqDMAwAUP+h8bBkHxoQBEEE0ZsI+9vs4HTWbdiunYvQQo7Wp6apxiwLGMS5uETIObzGhUHmwMoI9eAUWBlZH/sTHJZGqIZndCDXm1tQB9axWJq4SCxAqHEH7YIbECwi3ElkEGQQao3QGBE4TnPO83+HW+fYEA+3IAc7R/1xHjkWjO08kMjTVR2FW5C94+NWDcTisSB+kHNOOdmaz6sbSyPUQNTV6o0cHyVoWycvPBXQf8FeoPVmx0nAUODRdW8XuK6LxPlfysousgchziUBEzABEzABtQPVb3WneFlIwFCg+lf+U3w0LUhW/Nl5CmCWKW99WEitzaMFyYrbbxZUawPTQmpuAc9DdRP93TjiN8QdogrOqV9CmaQAAAAASUVORK5CYII=');
     game.load.image('planetfuel', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABdElEQVRYhe3ZwWrDMAwAUH9Cwcqh8j5UEAgUSqAktxLYB+w/tUNqL3GbWXbsYNYZdGvS11hWbFWpHcNQw5LY8x1R40zANvCi2YwgCrxoXl5bBIedZnOFnxiAPz5lYQZYXYudzovEFtj0clAQ3ANjm+FJIgEjAZubZjNlBE7zPe3903DLHLvnwznkfZ2j8biIHNuNHSKQSPOvOgrnkKNwuqsGYvtYEAVyTpSTN729urHTbHrIulp/C6WUC4ecHiXIr5NnmgvoUU9riVsCHfTqvXGkwK/TSRwxT64YMPTZFNxLoLTupQJDU/oEXNZFQ424rMRMsY1YnEOOwIYaLg70kVUCLVKKywL0p24rpDlbBTAG+V7AHAX8vYHS6f2bwNRXXUng0xEgZbNQMgez7Gb+geRt/SVb/tLAzS2/QwYOTSWBwUOTQ9L2sTMGEg3McS6uAqhU5a2PFbLW5pFDUsXttxW01gbmCllzC9iOqpvor8YRf0N8Ay0wenXPjGwuAAAAAElFTkSuQmCC');
     game.load.image('star', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAABIklEQVR4nO3bMQ7EIBBDUe5/51W2ZaWtwsDH8C2597wyEa1tkOfTnjeld2N5C3Y16Cy0ozFXox2DSYNFQ9JIsYg0TDQkjRGLSANEQ9JHRyPSx0Yj0kdGI9LHRSPSR0Uj0sdEI9JH0BWQBKTH71LxCER68G4VbxUiPXL3CjgTkB6XUgEF3BCQHpVWAQXcCJAek1oBBRQwuuJVINID0iuggAJGV0ABBYyugAIKGF0BBRQwun6RGcUTUEABU+ufuSo8AQXkAUUcxBNQQB5QxEE8AQsARRzEE7EAT8ACQBEH8UQswBPQV+s83q2IpXi3IU7BuwVxKt7piEvwTkVcincaIoJ3AiTt9hMaIxqvDw0TC9eHRorG60ODxcL9i2iFEa04yWBfDcjIzwFeD38AAAAASUVORK5CYII=');
+    game.load.image('minimaprocket', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAHklEQVQ4jWN4xfD/PzUxw6iBowaOGjhq4KiBI9VAAB5mir1R0bMcAAAAAElFTkSuQmCC');
     // set time mode for FPS counter
     game.time.advancedTiming = true;
 }
@@ -55,8 +58,22 @@ function create() {
     // create graphics object for drawing proximity circles
     circles = game.add.graphics(0, 0);
 
+    // create minimap window
+    graphics = game.add.graphics(0, 0);
+    graphics.beginFill(0x757575);
+    graphics.drawRect(0, 0, 150, 150);
+    graphics.endFill();
+    graphics.fixedToCamera = true;
+
     // add rocket
     rocket = new Rocket(game, 500, 500, new Vector(0, 0), Math.PI * 3 / 4);
+
+    // add rocket minimap sprite
+    miniRocket = game.add.sprite(rocket.getX() * 150 / game.world.width, rocket.getY() * 150 / game.world.height, 'rocketoff');
+    miniRocket.anchor.set(0.5, 0.5);
+    miniRocket.scale.setTo(0.20);
+    miniRocket.fixedToCamera = true;
+
 
     // create planets and sun
     planets = [];
@@ -344,6 +361,23 @@ function update() {
         this.gameOver.setText("");
         gameOver = false;
     }
+
+    // bring minimap to top
+    game.world.bringToTop(graphics);
+    for(var i = 0; i < planets.length; i++) {
+        planets[i].bringToTop();
+    }
+    for(var i = 0; i < stars.length; i++) {
+        stars[i].bringToTop();
+    }
+
+    // update rocket's position on minimap
+    miniRocket.fixedToCamera = false;
+    miniRocket.x = rocket.getX() * 150 / game.world.width;
+    miniRocket.y = rocket.getY() * 150 / game.world.height;
+    miniRocket.rotation = rocket.getDirection();
+    miniRocket.fixedToCamera = true;
+    game.world.bringToTop(miniRocket);
 }
 
 function render() {

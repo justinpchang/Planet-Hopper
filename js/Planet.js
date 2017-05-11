@@ -2,10 +2,20 @@ class Planet {
     constructor(game, x, y, mass) {
         this.x = x;
         this.y = y;
-        this.mass = mass - 500;
+        this.mass = mass - 300;
+        this.game = game;
         this.planet = game.add.sprite(x, y, 'planetgreen');
         this.planet.anchor.set(0.5, 0.5);
         this.planet.scale.setTo((mass-700)/800 + .3, (mass-700)/800 + .3);
+
+        this.mini = game.add.sprite(x * 150 / game.world.width, y * 150 / game.world.height, 'planetgreen');
+        this.mini.anchor.set(0.5, 0.5);
+        this.mini.scale.setTo(((mass-700)/800 + .3) * 500 / game.world.width, ((mass-700)/800 + .3) * 500 / game.world.height);
+        this.mini.fixedToCamera = true;
+    }
+
+    bringToTop() {
+        game.world.bringToTop(this.mini);
     }
 
     getX() {
@@ -33,6 +43,10 @@ class Planet {
     setMass(mass) {
         this.mass = mass;
         this.planet.scale.setTo((mass-700)/800 + .3, (mass-700)/800 + .3);
+    }
+
+    getSprite() {
+        return this.planet;
     }
 
     endGameState() {
