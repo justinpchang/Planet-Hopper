@@ -7,14 +7,14 @@
 const PROXIMITY = 100; // distance the rocket needs to be away from planet
 const BUFFER_ZONE = 0; // distance the rocket can stray from the bounds
 const UNIT_J = new Vector(0, -1);
-const THRUST = .05;
+const THRUST = .02;
 const PLANET_MASS = 1300; // 800-1500
 const FUEL_INTERVAL = 5; // every fifth planet
-const FUEL_USE = 0.1;
+const FUEL_USE = 0.05;
 const TURNING_SPEED = 0.05;
 
 var rocket;
-var planets;
+var planets, stars;
 var curPlanetIndex = 2; // 0 - planet0, 1 - planet1, 2 - new
 var score = 0;
 var bgGroup; // group of squares for background asteroids
@@ -56,17 +56,30 @@ function create() {
     circles = game.add.graphics(0, 0);
 
     // add rocket
-    rocket = new Rocket(game, 350, 400, new Vector(0, -1), 0);
+    rocket = new Rocket(game, 500, 500, new Vector(0, 0), Math.PI * 3 / 4);
 
-    // create first two planets
-    var planet1 = new Planet(game, 500, 300, PLANET_MASS);
-    var planet2 = new Planet(game, 100, 200, PLANET_MASS);
-    planets = [planet1, planet2];
+    // create planets and sun
+    planets = [];
+    planets.push(new Planet(game, 250, 750, getRandomInt(800, 1500)));
+    planets.push(new Planet(game, 750, 250, getRandomInt(800, 1500)));
+    planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(800, 1500)));
+    planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(800, 1500)));
+    planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(800, 1500)));
+    planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(800, 1500)));
+    planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(800, 1500)));
+    planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(800, 1500)));
+    stars = [];
+    star = new Planet(game, 1000, 1000, 2700);
+    star.makeStar();
+    stars.push(star);
+
     // draw circles around planets
+    /*
     circles.lineStyle(1, 0xFF00FF);
     circles.drawCircle(planets[0].x, planets[0].y, 100);
     circles.drawCircle(planets[1].x, planets[1].y, 100);
     circles.lineStyle(0, 0xFF00FF);
+    */
 
     // add key input to the game
     this.keys = game.input.keyboard.createCursorKeys();
@@ -135,6 +148,30 @@ function update() {
         }
     }
 
+    for(var i = 0; i < stars.length; i++) {
+        // calculate acceleration due to gravity
+        dx = rocket.getX() - stars[i].getX();
+        dy = rocket.getY() - stars[i].getY();
+        r = Math.abs(Math.hypot(dx, dy));
+        theta = Math.atan(dy / dx);
+        mag = calculateGravity(stars[i].getMass(), r);
+        if(rocket.getX() < stars[i].getX()) {
+            accelerations.push(new Vector(mag * Math.cos(theta), mag * Math.sin(theta)));
+        } else {
+            accelerations.push(new Vector(-1 * mag * Math.cos(theta), -1 * mag * Math.sin(theta)));
+        }
+
+        // check if rocket has hit star
+        if(stars[i].isOverlapping(rocket.getX(), rocket.getY())) {
+            rocket.setVelocity(new Vector(0, 0));
+            for(var i = 0; i < planets.length; i++) {
+                planets[i].endGameState();
+            }
+            this.gameOver.setText("GAME OVER!\nPlanets: " + score);
+            gameOver = true;
+        }
+    }
+
     // add thrust in forward direction of velocity
     if(this.fuelLevel > 0 && gameOver == false && this.fuelLevel > 0 && (this.keys.up.isDown || this.upKey.isDown)) {
         var unitVector = [-1 * Math.cos(-1 * rocket.getDirection() - Math.PI / 2), Math.sin(-1 * rocket.getDirection() - Math.PI / 2)];
@@ -166,6 +203,7 @@ function update() {
     rocket.setY(rocket.getY() + rocket.getVelocity().getComponents()[1]);
 
     // check if within proximity of planet
+    /*
     if(calculateDistance(planets[0]) && (curPlanetIndex === 2 || curPlanetIndex != 0)) {
         // check if fuel planet
         if(score % FUEL_INTERVAL == 0) {
@@ -240,6 +278,7 @@ function update() {
         circles.drawCircle(planets[0].x, planets[0].y, 100);
         circles.lineStyle(0, 0xFF00FF);
     }
+    */
 
     // check bounds
     if(rocket.getX() < -1 * BUFFER_ZONE || rocket.getX() > game.world.width + BUFFER_ZONE || rocket.getY() < -1 * BUFFER_ZONE || rocket.getY() > game.world.height + BUFFER_ZONE) {    // pause the game and display game over text
@@ -258,11 +297,11 @@ function update() {
     // check if restart game
     if(this.restartKey.isDown) {
         // reset rocket
-        rocket.setX(350);
-        rocket.setY(400);
+        rocket.setX(500);
+        rocket.setY(500);
 
         // reset movement variables
-        rocket.setVelocity(new Vector(0, -1));
+        rocket.setVelocity(new Vector(0, 0));
         rocket.setDirection(0)
 
         // delete two old planets
@@ -271,27 +310,29 @@ function update() {
         }
 
         // create first two planets
-        var planet0 = new Planet(game, 500, 300, PLANET_MASS);
-        var planet1 = new Planet(game, 100, 200, PLANET_MASS);
-        /*
-        planets[0].setX(500);
-        planets[0].setY(300);
-        planets[0].setMass(PLANET_MASS);
-        planets[0].changeColorGreen();
-        planets[1].setX(100);
-        planets[1].setY(200);
-        planets[1].setMass(PLANET_MASS);
-        planets[1].changeColorGreen();
-        */
-        planets = [planet0, planet1];
+        planets = [];
+        planets.push(new Planet(game, 250, 750, getRandomInt(800, 1500)));
+        planets.push(new Planet(game, 750, 250, getRandomInt(800, 1500)));
+        planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(800, 1500)));
+        planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(800, 1500)));
+        planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(800, 1500)));
+        planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(800, 1500)));
+        planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(800, 1500)));
+        planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(800, 1500)));
+        stars = [];
+        star = new Planet(game, 1000, 1000, 2700);
+        star.makeStar();
+        stars.push(star);
 
         // remake proximity circles
+        /*
         circles.destroy();
         circles = game.add.graphics(0, 0);
         circles.lineStyle(1, 0xFF00FF);
         circles.drawCircle(planets[0].x, planets[0].y, 100);
         circles.drawCircle(planets[1].x, planets[1].y, 100);
         circles.lineStyle(0, 0xFF00FF);
+        */
 
         // reset score
         score = 0;

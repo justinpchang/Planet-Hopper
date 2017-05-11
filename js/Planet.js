@@ -2,7 +2,7 @@ class Planet {
     constructor(game, x, y, mass) {
         this.x = x;
         this.y = y;
-        this.mass = mass;
+        this.mass = mass - 500;
         this.planet = game.add.sprite(x, y, 'planetgreen');
         this.planet.anchor.set(0.5, 0.5);
         this.planet.scale.setTo((mass-700)/800 + .3, (mass-700)/800 + .3);
@@ -41,6 +41,10 @@ class Planet {
 
     makeFuelPlanet() {
         this.planet.loadTexture('planetfuel');
+    }
+
+    makeStar() {
+        this.planet.loadTexture('star');
     }
 
     // change color of planet to red once the planet has been 'visited'
