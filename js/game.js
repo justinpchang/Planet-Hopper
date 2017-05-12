@@ -7,21 +7,27 @@
 const PROXIMITY = 100; // distance the rocket needs to be away from planet
 const BUFFER_ZONE = 0; // distance the rocket can stray from the bounds
 const UNIT_J = new Vector(0, -1);
-const THRUST = .03;
+const THRUST = .06;
 const PLANET_MASS = 1300; // 800-1500
 const FUEL_INTERVAL = 5; // every fifth planet
 const FUEL_USE = 0.05;
-const TURNING_SPEED = 0.05;
+const TURNING_SPEED = 0.04;
+const SLOW_MOTION = 0.4;
+const LANDING_SPEED = 10;
 
 var rocket;
 var miniRocket;
 var graphics;
 var planets, stars;
+var targetPlanet;
 var curPlanetIndex = 2; // 0 - planet0, 1 - planet1, 2 - new
 var score = 0;
 var bgGroup; // group of squares for background asteroids
 var circles; // graphics object for drawing proximity circles around planets
 var gameOver = false;
+var speed;
+var isLanded = false;
+var landedPlanet = 0;
 
 // create the game
 var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
@@ -36,14 +42,16 @@ function preload() {
     game.load.image('planetfuel', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAABdElEQVRYhe3ZwWrDMAwAUH9Cwcqh8j5UEAgUSqAktxLYB+w/tUNqL3GbWXbsYNYZdGvS11hWbFWpHcNQw5LY8x1R40zANvCi2YwgCrxoXl5bBIedZnOFnxiAPz5lYQZYXYudzovEFtj0clAQ3ANjm+FJIgEjAZubZjNlBE7zPe3903DLHLvnwznkfZ2j8biIHNuNHSKQSPOvOgrnkKNwuqsGYvtYEAVyTpSTN729urHTbHrIulp/C6WUC4ecHiXIr5NnmgvoUU9riVsCHfTqvXGkwK/TSRwxT64YMPTZFNxLoLTupQJDU/oEXNZFQ424rMRMsY1YnEOOwIYaLg70kVUCLVKKywL0p24rpDlbBTAG+V7AHAX8vYHS6f2bwNRXXUng0xEgZbNQMgez7Gb+geRt/SVb/tLAzS2/QwYOTSWBwUOTQ9L2sTMGEg3McS6uAqhU5a2PFbLW5pFDUsXttxW01gbmCllzC9iOqpvor8YRf0N8Ay0wenXPjGwuAAAAAElFTkSuQmCC');
     game.load.image('star', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAYAAACOEfKtAAABIklEQVR4nO3bMQ7EIBBDUe5/51W2ZaWtwsDH8C2597wyEa1tkOfTnjeld2N5C3Y16Cy0ozFXox2DSYNFQ9JIsYg0TDQkjRGLSANEQ9JHRyPSx0Yj0kdGI9LHRSPSR0Uj0sdEI9JH0BWQBKTH71LxCER68G4VbxUiPXL3CjgTkB6XUgEF3BCQHpVWAQXcCJAek1oBBRQwuuJVINID0iuggAJGV0ABBYyugAIKGF0BBRQwun6RGcUTUEABU+ufuSo8AQXkAUUcxBNQQB5QxEE8AQsARRzEE7EAT8ACQBEH8UQswBPQV+s83q2IpXi3IU7BuwVxKt7piEvwTkVcincaIoJ3AiTt9hMaIxqvDw0TC9eHRorG60ODxcL9i2iFEa04yWBfDcjIzwFeD38AAAAASUVORK5CYII=');
     game.load.image('minimaprocket', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAHklEQVQ4jWN4xfD/PzUxw6iBowaOGjhq4KiBI9VAAB5mir1R0bMcAAAAAElFTkSuQmCC');
-    // set time mode for FPS counter
-    game.time.advancedTiming = true;
 }
 
 function create() {
     // initialize game settings
     game.world.setBounds(0, 0, 2000, 2000);
     game.stage.disableVisibilityChange = true;
+
+    // set time mode for FPS counter
+    game.time.advancedTiming = true;
+    game.time.slowMotion = 15.0;
 
     // create asteroids
     var sqr, size;
@@ -67,6 +75,7 @@ function create() {
 
     // add rocket
     rocket = new Rocket(game, 500, 500, new Vector(0, 0), Math.PI * 3 / 4);
+    rocket.setDirection(Math.PI * 3 / 4);
 
     // add rocket minimap sprite
     miniRocket = game.add.sprite(rocket.getX() * 150 / game.world.width, rocket.getY() * 150 / game.world.height, 'rocketoff');
@@ -86,9 +95,18 @@ function create() {
     planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(800, 1500)));
     planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(800, 1500)));
     stars = [];
-    star = new Planet(game, 1000, 1000, 2700);
+    star = new Planet(game, 1000, 1000, 3000);
     star.makeStar();
     stars.push(star);
+
+    // change stars on minimap to star sprite
+    for(var i = 0; i < stars.length; i++) {
+        stars[i].changeMiniYellow();
+    }
+
+    // select a random planet to be target planet
+    targetPlanet = getRandomInt(0, planets.length-1);
+    planets[targetPlanet].changeColorRed();
 
     // draw circles around planets
     /*
@@ -105,6 +123,13 @@ function create() {
     this.leftKey = game.input.keyboard.addKey(Phaser.Keyboard.A);
     this.rightKey = game.input.keyboard.addKey(Phaser.Keyboard.D);
     this.restartKey = game.input.keyboard.addKey(Phaser.Keyboard.R);
+	this.spaceKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+    // create text for speedometer
+    var speedStyle = { font: "60px Arial", fill: "#ff0044", align: "right" };
+    speed = game.add.text(game.width - 80, game.height - 40, "-- u/s", speedStyle);
+    speed.anchor.set(0.5);
+    speed.fixedToCamera = true;
 
     // create text for score in bottom left
     var scoreStyle = { font: "20px Arial", fill: "#ff0044", align: "left" };
@@ -152,17 +177,47 @@ function update() {
             accelerations.push(new Vector(-1 * mag * Math.cos(theta), -1 * mag * Math.sin(theta)));
         }
 
-        // check if within proximity of planet
-
         // check if rocket has hit planet
         if(planets[i].isOverlapping(rocket.getX(), rocket.getY())) {
-            rocket.setVelocity(new Vector(0, 0));
-            for(var i = 0; i < planets.length; i++) {
-                planets[i].endGameState();
+            if(rocket.getVelocity().getMagnitude() < LANDING_SPEED) { // slow enough to land
+                if(i === targetPlanet) { // correct planet
+                    planets[i].changeColorGreen();
+                    // set new target planet
+                    var target = getRandomInt(0, planets.length-1);
+                    while(target === i) {
+                        target = getRandomInt(0, planets.length-1);
+                    }
+                    targetPlanet = target;
+                    planets[targetPlanet].changeColorRed();
+                    score++;
+                } //else {
+                    // land regularly
+                    isLanded = true;
+                    planets[i].endGameState();
+                    landedPlanet = i;
+                    rocket.setVelocity(new Vector(0, 0));
+                //}
+            } else { // crashed
+                rocket.setVelocity(new Vector(0, 0));
+                for(var i = 0; i < planets.length; i++) {
+                    planets[i].endGameState();
+                }
+                this.gameOver.setText("GAME OVER!\nPlanets: " + score);
+                gameOver = true;
             }
-            this.gameOver.setText("GAME OVER!\nPlanets: " + score);
-            gameOver = true;
         }
+    }
+
+    // check if landed and need to launch
+    if(this.spaceKey.isDown && isLanded) {
+        // reset rocket
+        rocket.setX(500);
+        rocket.setY(500);
+        // reset movement variables
+        rocket.setVelocity(new Vector(0, 0));
+        rocket.setDirection(0)
+        // set planet back to normal
+        planets[landedPlanet].setMass(getRandomInt(800, 1500));
     }
 
     for(var i = 0; i < stars.length; i++) {
@@ -202,11 +257,11 @@ function update() {
     // turn rocket (uses 1/3rd the fuel of forward thrust)
     if(this.fuelLevel > 0 && gameOver == false) {
         if(this.keys.left.isDown || this.leftKey.isDown) {
-            rocket.setDirection(rocket.getDirection() - 0.05);
+            rocket.setDirection(rocket.getDirection() - TURNING_SPEED);
             this.fuelLevel -= FUEL_USE / 3;
         }
         if(this.keys.right.isDown || this.rightKey.isDown) {
-            rocket.setDirection(rocket.getDirection() + 0.05);
+            rocket.setDirection(rocket.getDirection() + TURNING_SPEED);
             this.fuelLevel -= FUEL_USE / 3;
         }
     }
@@ -216,8 +271,8 @@ function update() {
         rocket.setVelocity(rocket.getVelocity().add(accelerations[i]));
     }
     // increment position of rocket
-    rocket.setX(rocket.getX() + rocket.getVelocity().getComponents()[0]);
-    rocket.setY(rocket.getY() + rocket.getVelocity().getComponents()[1]);
+    rocket.setX(rocket.getX() + rocket.getVelocity().getComponents()[0] * SLOW_MOTION);
+    rocket.setY(rocket.getY() + rocket.getVelocity().getComponents()[1] * SLOW_MOTION);
 
     // check if within proximity of planet
     /*
@@ -341,6 +396,15 @@ function update() {
         star.makeStar();
         stars.push(star);
 
+        // set new target planet
+        targetPlanet = getRandomInt(0, planets.length-1);
+        planets[targetPlanet].changeColorRed();
+
+        // change stars on minimap to star sprite
+        for(var i = 0; i < stars.length; i++) {
+            stars[i].changeMiniYellow();
+        }
+
         // remake proximity circles
         /*
         circles.destroy();
@@ -378,6 +442,15 @@ function update() {
     miniRocket.rotation = rocket.getDirection();
     miniRocket.fixedToCamera = true;
     game.world.bringToTop(miniRocket);
+
+    // update speedometer
+    var vel = rocket.getVelocity().getMagnitude();
+    speed.setText(Math.floor(vel) + " u/s");
+    if(vel < LANDING_SPEED) {
+        speed.setStyle({font:"60px Arial", fill:"#62f442", align:"right"});
+    } else {
+        speed.setStyle({font:"60px Arial", fill:"#ff0044", align:"right"});
+    }
 }
 
 function render() {

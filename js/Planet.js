@@ -2,15 +2,15 @@ class Planet {
     constructor(game, x, y, mass) {
         this.x = x;
         this.y = y;
-        this.mass = mass - 300;
+        this.mass = mass - 100;
         this.game = game;
         this.planet = game.add.sprite(x, y, 'planetgreen');
         this.planet.anchor.set(0.5, 0.5);
-        this.planet.scale.setTo((mass-700)/800 + .3, (mass-700)/800 + .3);
+        this.planet.scale.setTo(mass / 600);
 
         this.mini = game.add.sprite(x * 150 / game.world.width, y * 150 / game.world.height, 'planetgreen');
         this.mini.anchor.set(0.5, 0.5);
-        this.mini.scale.setTo(((mass-700)/800 + .3) * 500 / game.world.width, ((mass-700)/800 + .3) * 500 / game.world.height);
+        this.mini.scale.setTo((mass/600) * 200 / game.world.width, (mass/600) * 200 / game.world.height);
         this.mini.fixedToCamera = true;
     }
 
@@ -42,7 +42,7 @@ class Planet {
 
     setMass(mass) {
         this.mass = mass;
-        this.planet.scale.setTo((mass-700)/800 + .3, (mass-700)/800 + .3);
+        this.planet.scale.setTo(mass/600 + .3, mass/600 + .3);
     }
 
     getSprite() {
@@ -64,10 +64,16 @@ class Planet {
     // change color of planet to red once the planet has been 'visited'
     changeColorRed() {
         this.planet.loadTexture('planetred');
+        this.mini.loadTexture('planetred');
     }
 
     changeColorGreen() {
         this.planet.loadTexture('planetgreen');
+        this.mini.loadTexture('planetgreen');
+    }
+
+    changeMiniYellow() {
+        this.mini.loadTexture('star');
     }
 
     destroy() {
