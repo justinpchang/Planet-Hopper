@@ -14,7 +14,7 @@ class Rocket {
         this.mini.scale.setTo(0.333333333, 0.333333333);
         this.mini.fixedToCamera = true;*/
     }
-
+    
     getSprite() {
         return this.rocket;
     }
