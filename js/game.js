@@ -10,7 +10,7 @@ const UNIT_J = new Vector(0, -1);
 const THRUST = .06;
 const PLANET_MASS = 1300; // 800-1500
 const FUEL_INTERVAL = 5; // every fifth planet
-const FUEL_USE = 0.05;
+const FUEL_USE = 0.15;
 const TURNING_SPEED = 0.07;
 const SLOW_MOTION = 0.4;
 const LANDING_SPEED = 14;
@@ -30,6 +30,7 @@ var isLanded = false;
 var landedPlanet = 0;
 var lastLandingVelocity;
 var landingPlanetMass;
+var storedPlanet;
 
 // create the game
 var game = new Phaser.Game(800, 700, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render});
@@ -88,14 +89,14 @@ function create() {
 
     // create planets and sun
     planets = [];
-    planets.push(new Planet(game, 250, 750, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, 750, 250, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(800, 1500)));
-    planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(800, 1500)));
+    planets.push(new Planet(game, 250, 750, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, 750, 250, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(1000, 2000)));
+    planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(1000, 2000)));
     stars = [];
     star = new Planet(game, 1000, 1000, 3000);
     star.makeStar();
@@ -198,9 +199,10 @@ function update() {
                 } //else {
                     // land regularly
                     isLanded = true;
+                    landedPlanet = i;
+                    storedPlanet = planets[landedPlanet].getMass();
                     lastLandingVelocity = rocket.getVelocity();
                     planets[landedPlanet].endGameState();
-                    landedPlanet = i;
                     accelerations = new Array();
                     rocket.setVelocity(new Vector(0, 0));
                 //}
@@ -220,7 +222,7 @@ function update() {
         rocket.setX(rocket.getX() + (rocket.getX() - planets[landedPlanet].getX()) * 2);
         rocket.setY(rocket.getY() + (rocket.getY() - planets[landedPlanet].getY()) * 2);
         rocket.setVelocity(new Vector(lastLandingVelocity.getComponents()[0] * -.5, lastLandingVelocity.getComponents()[1] * -.5));
-        planets[landedPlanet].setMass(getRandomInt(800, 1500));
+        planets[landedPlanet].setMass(storedPlanet);
         if(this.fuelLevel <= 50) {
             this.fuelLevel += 50;
         } else {
@@ -396,14 +398,14 @@ function update() {
 
         // create first two planets
         planets = [];
-        planets.push(new Planet(game, 250, 750, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, 750, 250, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(800, 1500)));
-        planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(800, 1500)));
+        planets.push(new Planet(game, 250, 750, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, 750, 250, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, 250, game.world.height-750, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, 750, game.world.height-250, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, game.world.width-250, 750, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, game.world.width-750, 250, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, game.world.width-250, game.world.height-750, getRandomInt(1000, 2000)));
+        planets.push(new Planet(game, game.world.width-750, game.world.height-250, getRandomInt(1000, 2000)));
         stars = [];
         star = new Planet(game, 1000, 1000, 2700);
         star.makeStar();

@@ -7,7 +7,6 @@ class Planet {
         this.planet = game.add.sprite(x, y, 'planetgreen');
         this.planet.anchor.set(0.5, 0.5);
         this.planet.scale.setTo(mass / 600);
-        this.storedMass = mass - 100;
 
         this.mini = game.add.sprite(x * 150 / game.world.width, y * 150 / game.world.height, 'planetgreen');
         this.mini.anchor.set(0.5, 0.5);
@@ -38,17 +37,12 @@ class Planet {
     }
 
     getMass() {
-        return this.mass + 100;
+        return this.mass;
     }
 
     setMass(mass) {
-        this.mass = mass - 100;
+        this.mass = mass;
         this.planet.scale.setTo(mass/600 + .3, mass/600 + .3);
-    }
-
-    restoreMass() {
-        this.mass = this.storedMass - 100;
-        this.planet.scale.setTo(this.mass/600 + .3, this.mass/600 + .3);
     }
 
     getSprite() {
